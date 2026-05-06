@@ -99,8 +99,7 @@
     <span class="scan-title">Escanear proyecto</span>
     <div id="qr-reader"></div>
     <p class="scan-hint">Apunta al código QR del proyecto</p>
-    <button class="btn-scan" id="btn-test" style="background:#555;margin-top:-10px;font-size:14px;padding:10px">PRUEBA SIN QR</button>
-    <div id="debug-msg" style="font-family:monospace;font-size:11px;color:#f90;padding:10px;word-break:break-all;max-width:300px;text-align:left"></div>
+
     <button class="btn-scan" id="btn-toggle-scan">ABRIR CÁMARA</button>
   </div>
 
@@ -288,14 +287,6 @@ async function renderTimerScreen(data, sesionActiva) {
 
 document.getElementById('btn-toggle-scan').addEventListener('click', startScanner);
 
-document.getElementById('btn-test').addEventListener('click', () => {
-  handleQR(JSON.stringify({proyecto:'0001',cliente:'TestCliente',tipo:'montaje',cabezal:'BT40'}));
-});
-
-function showDebug(msg) {
-  document.getElementById('debug-msg').textContent = msg;
-  console.log('DEBUG:', msg);
-}
 
 document.getElementById('btn-cancel-confirm').addEventListener('click', () => {
   currentData = null; showScreen('screen-scan');
@@ -312,12 +303,7 @@ document.getElementById('btn-iniciar').addEventListener('click', async () => {
     sessionId = result[0].id;
     await renderTimerScreen(currentData, result[0]);
     showToast('Sesión iniciada', 'success');
-  } catch(e) { 
-    const msg = e.message || String(e);
-    showToast('Error: ' + msg.substring(0,40), 'error'); 
-    showDebug('ERROR INICIAR: ' + msg);
-    console.error(e); 
-  }
+  } catch(e) { showToast('Error al iniciar sesión', 'error'); console.error(e); }
 });
 
 document.getElementById('btn-stop').addEventListener('click', async () => {
