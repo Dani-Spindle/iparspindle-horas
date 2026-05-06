@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IPAR · Dani">
+<meta name="theme-color" content="#0a0a0a">
+<title>IPAR · Dani</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;500;700;900&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --border: #2a2a2a;
+    --accent: #3498db;
+    --accent2: #5dade2;
+    --text: #f0f0f0;
+    --muted: #666;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --operario: DANI;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .header-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .header-sep { color: var(--border); font-size: 18px; }
+  .header-user {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; flex: 1; }
+  .screen.active { display: flex; }
+
+  /* ── SCAN SCREEN ── */
+  #screen-scan {
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px 20px;
+  }
+  .scan-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+  .scan-area {
+    width: 260px;
+    height: 260px;
+    position: relative;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #000;
+  }
+  #qr-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #qr-canvas { display: none; }
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .corner {
+    position: absolute;
+    width: 28px; height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+  }
+  .corner-tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; }
+  .corner-tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; }
+  .corner-bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; }
+  .corner-br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; }
+  .scan-line {
+    position: absolute;
+    left: 12px; right: 12px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scanline 2s linear infinite;
+    top: 12px;
+  }
+  @keyframes scanline {
+    0% { top: 12px; }
+    100% { top: calc(100% - 14px); }
+  }
+  .scan-hint {
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+  .btn-scan {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 16px 40px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    max-width: 300px;
+  }
+  .btn-scan:active { transform: scale(0.97); background: #e55a1f; }
+
+  /* ── CONFIRM SCREEN ── */
+  #screen-confirm {
+    padding: 28px 20px;
+    gap: 20px;
+    align-items: stretch;
+  }
+  .confirm-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .confirm-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .confirm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .tipo-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 3px;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .tipo-montaje { background: #1a3a2a; color: #2ecc71; border: 1px solid #2ecc7150; }
+  .tipo-desmontaje { background: #3a1a1a; color: #e74c3c; border: 1px solid #e74c3c50; }
+  .tipo-sat { background: #1a2a3a; color: #3498db; border: 1px solid #3498db50; }
+  .confirm-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+  }
+  .btn-primary {
+    flex: 1;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:active { background: var(--border); }
+
+  /* ── TIMER SCREEN ── */
+  #screen-timer {
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 20px;
+  }
+  .timer-project-info {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .timer-project-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+  .timer-project-client {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .timer-display {
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .timer-tipo {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .timer-digits {
+    font-family: 'Space Mono', monospace;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .timer-seconds {
+    font-size: 36px;
+    color: var(--accent2);
+  }
+  .timer-running-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1s infinite;
+    margin: 0 auto;
+  }
+  .timer-sessions {
+    width: 100%;
+  }
+  .sessions-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .session-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+  .session-time { color: var(--muted); }
+  .session-dur { color: var(--green); font-weight: 700; }
+  .btn-stop {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 22px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 0 30px #e74c3c40;
+  }
+  .btn-stop:active { transform: scale(0.97); background: #c0392b; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <span class="header-logo">IPAR</span>
+    <span class="header-sep">·</span>
+    <span class="header-user">DANI</span>
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    <span>ONLINE</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SCAN SCREEN -->
+  <div class="screen active" id="screen-scan">
+    <span class="scan-title">Escanear proyecto</span>
+    <div class="scan-area">
+      <video id="qr-video" playsinline autoplay muted></video>
+      <canvas id="qr-canvas"></canvas>
+      <div class="scan-overlay">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    <p class="scan-hint">Apunta al código QR del proyecto</p>
+    <button class="btn-scan" id="btn-start-scan">ABRIR CÁMARA</button>
+  </div>
+
+  <!-- CONFIRM SCREEN -->
+  <div class="screen" id="screen-confirm">
+    <div class="confirm-card">
+      <div class="confirm-label">Proyecto</div>
+      <div class="confirm-value" id="conf-proyecto">—</div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-label">Cliente</div>
+      <div class="confirm-value" id="conf-cliente">—</div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-label">Tipo de trabajo</div>
+      <div id="conf-tipo-badge" class="tipo-badge">—</div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-label">Cabezal</div>
+      <div class="confirm-value" id="conf-cabezal" style="font-size:18px">—</div>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn-secondary" id="btn-cancel-confirm">CANCELAR</button>
+      <button class="btn-primary" id="btn-iniciar">INICIAR</button>
+    </div>
+  </div>
+
+  <!-- TIMER SCREEN -->
+  <div class="screen" id="screen-timer">
+    <div class="timer-project-info">
+      <div>
+        <div class="timer-project-name" id="timer-proyecto">—</div>
+        <div class="timer-project-client" id="timer-cliente">—</div>
+      </div>
+      <div id="timer-tipo-badge2" class="tipo-badge" style="font-size:13px">—</div>
+    </div>
+
+    <div class="timer-display">
+      <div class="timer-tipo" id="timer-tipo-label">—</div>
+      <div class="timer-digits">
+        <span id="timer-hh">00</span>:<span id="timer-mm">00</span><span class="timer-seconds">:<span id="timer-ss">00</span></span>
+      </div>
+      <div class="timer-running-dot"></div>
+    </div>
+
+    <div class="timer-sessions">
+      <div class="sessions-title">SESIONES HOY</div>
+      <div class="sessions-list" id="sessions-list"></div>
+    </div>
+
+    <button class="btn-stop" id="btn-stop">⏹ PARAR</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const OPERARIO = 'dani';
+const SUPABASE_URL = 'https://kdgugxmidlojortcjfxk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_OtBWFoLezGqGqPbx2WU89Q_OT4Sci_J';
+
+let currentData = null;
+let sessionId = null;
+let startTime = null;
+let timerInterval = null;
+let scanning = false;
+
+// ── UTILS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+function getTipoBadgeClass(tipo) {
+  if (!tipo) return '';
+  const t = tipo.toLowerCase();
+  if (t === 'montaje') return 'tipo-montaje';
+  if (t === 'desmontaje') return 'tipo-desmontaje';
+  return 'tipo-sat';
+}
+
+// ── SUPABASE ──
+async function supabaseRequest(method, path, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  if (method === 'POST') return res.json();
+  return res;
+}
+
+async function checkActiveSession() {
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/sesiones?operario=eq.${OPERARIO}&fin=is.null&select=*`,
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+  );
+  const data = await res.json();
+  return data.length > 0 ? data[0] : null;
+}
+
+async function loadTodaySessions(proyecto) {
+  const today = new Date().toISOString().split('T')[0];
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/sesiones?operario=eq.${OPERARIO}&proyecto=eq.${proyecto}&inicio=gte.${today}T00:00:00&fin=not.is.null&select=*&order=inicio.desc`,
+    { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+  );
+  return res.json();
+}
+
+// ── QR SCANNER ──
+let videoStream = null;
+
+async function startScanner() {
+  const video = document.getElementById('qr-video');
+  const canvas = document.getElementById('qr-canvas');
+  const ctx = canvas.getContext('2d');
+
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = videoStream;
+    scanning = true;
+    document.getElementById('btn-start-scan').textContent = 'ESCANEANDO...';
+
+    function tick() {
+      if (!scanning) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          stopScanner();
+          handleQR(code.data);
+          return;
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  } catch (e) {
+    showToast('Error al acceder a la cámara', 'error');
+  }
+}
+
+function stopScanner() {
+  scanning = false;
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  document.getElementById('btn-start-scan').textContent = 'ABRIR CÁMARA';
+}
+
+function handleQR(raw) {
+  try {
+    const data = JSON.parse(raw);
+    if (!data.proyecto || !data.tipo) throw new Error('QR inválido');
+    currentData = data;
+    showConfirm(data);
+  } catch {
+    showToast('QR no reconocido', 'error');
+    showScreen('screen-scan');
+  }
+}
+
+function showConfirm(data) {
+  document.getElementById('conf-proyecto').textContent = data.proyecto || '—';
+  document.getElementById('conf-cliente').textContent = data.cliente || '—';
+  document.getElementById('conf-cabezal').textContent = data.cabezal || '—';
+  const badge = document.getElementById('conf-tipo-badge');
+  badge.textContent = (data.tipo || '').toUpperCase();
+  badge.className = 'tipo-badge ' + getTipoBadgeClass(data.tipo);
+  showScreen('screen-confirm');
+}
+
+// ── TIMER ──
+function startTimer(from) {
+  startTime = from;
+  timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime.getTime();
+    const s = Math.floor(elapsed / 1000);
+    document.getElementById('timer-hh').textContent = pad(Math.floor(s / 3600));
+    document.getElementById('timer-mm').textContent = pad(Math.floor((s % 3600) / 60));
+    document.getElementById('timer-ss').textContent = pad(s % 60);
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+async function renderTimerScreen(data, sesionActiva) {
+  document.getElementById('timer-proyecto').textContent = `#${data.proyecto} · ${data.cliente}`;
+  document.getElementById('timer-cliente').textContent = data.cabezal || '';
+  document.getElementById('timer-tipo-label').textContent = (data.tipo || '').toUpperCase();
+
+  const badge2 = document.getElementById('timer-tipo-badge2');
+  badge2.textContent = (data.tipo || '').toUpperCase();
+  badge2.className = 'tipo-badge ' + getTipoBadgeClass(data.tipo);
+
+  showScreen('screen-timer');
+  startTimer(new Date(sesionActiva.inicio));
+
+  const sessions = await loadTodaySessions(data.proyecto);
+  const list = document.getElementById('sessions-list');
+  list.innerHTML = '';
+  sessions.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'session-item';
+    const hora = new Date(s.inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    div.innerHTML = `<span class="session-time">${hora}</span><span class="session-dur">${s.duracion_min} min</span>`;
+    list.appendChild(div);
+  });
+}
+
+// ── EVENTS ──
+document.getElementById('btn-start-scan').addEventListener('click', startScanner);
+
+document.getElementById('btn-cancel-confirm').addEventListener('click', () => {
+  currentData = null;
+  showScreen('screen-scan');
+});
+
+document.getElementById('btn-iniciar').addEventListener('click', async () => {
+  if (!currentData) return;
+  try {
+    const result = await supabaseRequest('POST', 'sesiones', {
+      operario: OPERARIO,
+      proyecto: currentData.proyecto,
+      cliente: currentData.cliente,
+      tipo_trabajo: currentData.tipo,
+      cabezal: currentData.cabezal || null,
+      inicio: new Date().toISOString()
+    });
+    sessionId = result[0].id;
+    await renderTimerScreen(currentData, result[0]);
+    showToast('Sesión iniciada', 'success');
+  } catch (e) {
+    showToast('Error al iniciar sesión', 'error');
+    console.error(e);
+  }
+});
+
+document.getElementById('btn-stop').addEventListener('click', async () => {
+  if (!sessionId) return;
+  stopTimer();
+  const fin = new Date();
+  const durMin = Math.round((fin - startTime) / 60000);
+  try {
+    await supabaseRequest('PATCH', `sesiones?id=eq.${sessionId}`, {
+      fin: fin.toISOString(),
+      duracion_min: durMin
+    });
+    showToast(`Guardado · ${durMin} min`, 'success');
+    sessionId = null;
+    startTime = null;
+    currentData = null;
+    showScreen('screen-scan');
+  } catch (e) {
+    showToast('Error al guardar', 'error');
+    startTimer(startTime);
+  }
+});
+
+// ── INIT ──
+(async () => {
+  const active = await checkActiveSession();
+  if (active) {
+    currentData = {
+      proyecto: active.proyecto,
+      cliente: active.cliente,
+      tipo: active.tipo_trabajo,
+      cabezal: active.cabezal
+    };
+    sessionId = active.id;
+    await renderTimerScreen(currentData, active);
+    showToast('Sesión activa recuperada', 'success');
+  }
+})();
+</script>
+</body>
+</html>
