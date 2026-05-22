@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/benat", "destination": "/Benat/index.html" },
     { "source": "/zigor", "destination": "/Zigor/index.html" },
-    { "source": "/dani",  "destination": "/Dani/index.html"  }
+    { "source": "/dani",  "destination": "/Dani/index.html"  },
+    { "source": "/dani/panel", "destination": "/Dani/panel/index.html" }
   ]
 }
