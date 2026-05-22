@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/benat", "destination": "/Benat/index.html" },
+    { "source": "/zigor", "destination": "/Zigor/index.html" },
+    { "source": "/dani",  "destination": "/Dani/index.html"  }
+  ]
+}
