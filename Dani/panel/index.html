@@ -416,9 +416,9 @@
     <label>Tipo</label>
     <select id="f-tipo" onchange="filtrar()">
       <option value="">Todos</option>
-      <option value="montaje">Montaje</option>
-      <option value="desmontaje">Desmontaje</option>
-      <option value="sat">SAT</option>
+      <option value="Montaje">Montaje</option>
+      <option value="Desmontaje">Desmontaje</option>
+      <option value="SAT">SAT</option>
     </select>
   </div>
   <div class="filter-group">
@@ -578,7 +578,7 @@ function renderTabla() {
 
   document.getElementById('tabla-body').innerHTML = sorted.map(s => {
     const tipo = s.tipo_trabajo || '';
-    const tipoClass = tipo === 'montaje' ? 'tipo-montaje' : tipo === 'desmontaje' ? 'tipo-desmontaje' : 'tipo-sat';
+    const tipoClass = tipo === 'Montaje' ? 'tipo-montaje' : tipo === 'Desmontaje' ? 'tipo-desmontaje' : 'tipo-sat';
     const inicio = s.inicio ? s.inicio.replace('T', ' ').substring(0,16) : '—';
     const fin    = s.fin    ? s.fin.replace('T', ' ').substring(0,16)    : '<span style="color:var(--accent)">EN CURSO</span>';
     return `<tr>
@@ -597,7 +597,7 @@ function renderResumen() {
   const proyMap = {};
   filteredData.forEach(s => {
     const key = s.proyecto || '???';
-    if (!proyMap[key]) proyMap[key] = { proyecto: key, cliente: s.cliente||'', total: 0, montaje: 0, desmontaje: 0, sat: 0, sesiones: 0 };
+    if (!proyMap[key]) proyMap[key] = { proyecto: key, cliente: s.cliente||'', total: 0, Montaje: 0, Desmontaje: 0, SAT: 0, sesiones: 0 };
     proyMap[key].total += s.duracion_min || 0;
     proyMap[key][s.tipo_trabajo] = (proyMap[key][s.tipo_trabajo] || 0) + (s.duracion_min || 0);
     proyMap[key].sesiones++;
@@ -625,9 +625,9 @@ function renderResumen() {
         </div>
       </div>
       <div class="card-breakdown">
-        ${p.montaje    ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--blue)">Montaje</span><span class="breakdown-val">${minToHours(p.montaje)}</span></div>` : ''}
-        ${p.desmontaje ? `<div class="breakdown-row"><span class="breakdown-label" style="color:#e74c3c">Desmontaje</span><span class="breakdown-val">${minToHours(p.desmontaje)}</span></div>` : ''}
-        ${p.sat        ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--purple)">SAT</span><span class="breakdown-val">${minToHours(p.sat)}</span></div>` : ''}
+        ${p.Montaje    ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--blue)">Montaje</span><span class="breakdown-val">${minToHours(p.Montaje)}</span></div>` : ''}
+        ${p.Desmontaje ? `<div class="breakdown-row"><span class="breakdown-label" style="color:#e74c3c">Desmontaje</span><span class="breakdown-val">${minToHours(p.Desmontaje)}</span></div>` : ''}
+        ${p.SAT        ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--purple)">SAT</span><span class="breakdown-val">${minToHours(p.SAT)}</span></div>` : ''}
       </div>
     </div>
   `).join('');
@@ -667,7 +667,7 @@ function exportarExcel() {
   const proyMap = {};
   filteredData.forEach(s => {
     const key = s.proyecto || '???';
-    if (!proyMap[key]) proyMap[key] = { proyecto: key, cliente: s.cliente||'', montaje: 0, desmontaje: 0, sat: 0, total: 0 };
+    if (!proyMap[key]) proyMap[key] = { proyecto: key, cliente: s.cliente||'', Montaje: 0, Desmontaje: 0, SAT: 0, total: 0 };
     proyMap[key].total += s.duracion_min || 0;
     proyMap[key][s.tipo_trabajo] = (proyMap[key][s.tipo_trabajo] || 0) + (s.duracion_min || 0);
   });
@@ -675,9 +675,9 @@ function exportarExcel() {
   const resumen = Object.values(proyMap).sort((a,b) => b.total - a.total).map(p => ({
     'Proyecto':        p.proyecto,
     'Cliente':         p.cliente,
-    'Montaje (h)':     (p.montaje    / 60).toFixed(2),
-    'Desmontaje (h)':  (p.desmontaje / 60).toFixed(2),
-    'SAT (h)':         (p.sat        / 60).toFixed(2),
+    'Montaje (h)':     (p.Montaje    / 60).toFixed(2),
+    'Desmontaje (h)':  (p.Desmontaje / 60).toFixed(2),
+    'SAT (h)':         (p.SAT        / 60).toFixed(2),
     'TOTAL (h)':       (p.total      / 60).toFixed(2),
   }));
 
