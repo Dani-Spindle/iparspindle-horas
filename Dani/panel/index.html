@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IPAR Spindle · Panel Dani</title>
+<title>IPAR Spindle · Horas Proyectos</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;600;700;900&display=swap');
@@ -12,8 +12,8 @@
     --bg: #0d0f14;
     --surface: #161a22;
     --border: #252a35;
-    --accent: #e8532a;
-    --accent2: #f0a500;
+    --accent: #2980b9;
+    --accent2: #5dade2;
     --text: #e8eaf0;
     --muted: #5a6070;
     --green: #2ecc71;
@@ -55,7 +55,7 @@
     display: flex; align-items: center; gap: 7px;
   }
   .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover { background: #d4441e; transform: translateY(-1px); }
+  .btn-primary:hover { background: #1f6fa0; transform: translateY(-1px); }
   .btn-excel { background: #1a7a4a; color: white; }
   .btn-excel:hover { background: #15643d; transform: translateY(-1px); }
   .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
@@ -179,7 +179,7 @@
 <body>
 
 <header>
-  <div class="logo">IPAR<span>·</span>SPINDLE</div>
+  <div><div class="logo">IPAR<span>·</span>SPINDLE</div><div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-top:2px;">HORAS PROYECTOS</div></div>
   <div class="header-right">
     <div class="view-toggle">
       <button class="view-btn active" onclick="setView('sesiones', this)">Sesiones</button>
