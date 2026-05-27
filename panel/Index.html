@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPAR Spindle · Horas Proyectos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;600;700;900&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a22;
+    --border: #252a35;
+    --accent: #2980b9;
+    --accent2: #5dade2;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --purple: #9b59b6;
+    --red: #e74c3c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Barlow Condensed', sans-serif; min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--surface);
+  }
+  .logo { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: var(--accent); }
+  .logo span { color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+
+  .filters {
+    display: flex; gap: 12px; padding: 18px 28px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+
+  input[type="text"], input[type="date"], select {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; font-family: 'DM Mono', monospace; font-size: 13px;
+    border-radius: 4px; outline: none; transition: border-color 0.2s; min-width: 130px;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+
+  .btn {
+    padding: 9px 20px; border: none; border-radius: 4px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1f6fa0; transform: translateY(-1px); }
+  .btn-excel { background: #1a7a4a; color: white; }
+  .btn-excel:hover { background: #15643d; transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TOGGLE EN CURSO / CERRADOS */
+  .estado-toggle {
+    display: flex; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+  .estado-btn {
+    padding: 7px 16px; border: none; background: transparent; color: var(--muted);
+    cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+    font-size: 13px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;
+  }
+  .estado-btn.active-open  { background: var(--green); color: #0d0f14; }
+  .estado-btn.active-closed { background: var(--muted); color: #0d0f14; }
+  .estado-btn.active-all   { background: var(--blue); color: white; }
+
+  .stats-bar { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+  .stat { flex: 1; background: var(--surface); padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+  .stat-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+  .stat-value { font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; color: var(--text); }
+  .stat-value.orange { color: var(--accent); }
+  .stat-value.green  { color: var(--green); }
+  .stat-value.blue   { color: var(--blue); }
+
+  .table-container { padding: 24px 28px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  thead th {
+    text-align: left; padding: 10px 14px; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border);
+    font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th.sort-asc::after  { content: ' ↑'; color: var(--accent); }
+  thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(232, 83, 42, 0.04); }
+  tbody td { padding: 11px 14px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); }
+
+  .proyecto-num { color: var(--accent); font-weight: 500; }
+  .cliente-cell { color: var(--text); font-weight: 400; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
+
+  .tipo-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 3px;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    font-weight: 600; font-family: 'Barlow Condensed', sans-serif;
+  }
+  .tipo-montaje   { background: rgba(52,152,219,0.15); color: var(--blue); }
+  .tipo-desmontaje { background: rgba(231,76,60,0.15); color: var(--red); }
+  .tipo-sat       { background: rgba(155,89,182,0.15); color: var(--purple); }
+
+  .operario-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 3px;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif;
+    background: rgba(240,165,0,0.12); color: var(--accent2);
+  }
+  .horas-cell { color: var(--green); font-weight: 500; }
+  .fecha-cell { color: var(--muted); font-size: 12px; }
+
+  .status-msg { text-align: center; padding: 60px; color: var(--muted); font-size: 16px; letter-spacing: 1px; }
+  .status-msg span { display: block; font-size: 36px; margin-bottom: 12px; }
+
+  /* CARDS */
+  .resumen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 24px 28px; }
+
+  .proyecto-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 18px; transition: border-color 0.2s;
+  }
+  .proyecto-card:hover { border-color: var(--accent); }
+  .proyecto-card.cerrado {
+    opacity: 0.55;
+    border-color: var(--muted);
+  }
+  .proyecto-card.cerrado:hover { border-color: var(--muted); opacity: 0.75; }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .card-num { font-family: 'DM Mono', monospace; font-size: 20px; color: var(--accent); font-weight: 500; }
+  .card-cliente { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .card-total { font-family: 'DM Mono', monospace; font-size: 26px; color: var(--green); font-weight: 500; text-align: right; }
+  .card-total-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; text-align: right; }
+
+  .card-breakdown { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-label { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+  .breakdown-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); }
+
+  .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+
+  .estado-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 3px;
+  }
+  .estado-tag.open   { background: rgba(46,204,113,0.12); color: var(--green); }
+  .estado-tag.closed { background: rgba(90,96,112,0.2); color: var(--muted); }
+
+  .btn-cerrar {
+    padding: 6px 14px; border: none; border-radius: 4px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px;
+    letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;
+  }
+  .btn-cerrar.cerrar  { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
+  .btn-cerrar.cerrar:hover  { background: var(--red); color: white; }
+  .btn-cerrar.reabrir { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .btn-cerrar.reabrir:hover { background: var(--green); color: #0d0f14; }
+
+  .view-toggle { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .view-btn { padding: 7px 14px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; }
+  .view-btn.active { background: var(--accent); color: white; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div><div class="logo">IPAR<span>·</span>SPINDLE</div><div style="font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700;margin-top:2px;">HORAS PROYECTOS</div></div>
+  <div class="header-right">
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="setView('sesiones', this)">Sesiones</button>
+      <button class="view-btn" onclick="setView('proyectos', this)">Por Proyecto</button>
+    </div>
+    <button class="btn btn-excel" onclick="exportarExcel()">⬇ Exportar Excel</button>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="filter-group">
+    <label>Proyecto</label>
+    <input type="text" id="f-proyecto" placeholder="ej. 6151" oninput="filtrar()">
+  </div>
+  <div class="filter-group">
+    <label>Cliente</label>
+    <input type="text" id="f-cliente" placeholder="buscar..." oninput="filtrar()">
+  </div>
+  <div class="filter-group">
+    <label>Operario</label>
+    <select id="f-operario" onchange="filtrar()">
+      <option value="">Todos</option>
+      <option value="benat">Beñat</option>
+      <option value="zigor">Zigor</option>
+      <option value="dani">Dani</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Tipo</label>
+    <select id="f-tipo" onchange="filtrar()">
+      <option value="">Todos</option>
+      <option value="Montaje">Montaje</option>
+      <option value="Desmontaje">Desmontaje</option>
+      <option value="SAT">SAT</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Desde</label>
+    <input type="date" id="f-desde" onchange="filtrar()">
+  </div>
+  <div class="filter-group">
+    <label>Hasta</label>
+    <input type="date" id="f-hasta" onchange="filtrar()">
+  </div>
+  <div class="filter-group" id="grupo-estado" style="display:none">
+    <label>Estado proyectos</label>
+    <div class="estado-toggle">
+      <button class="estado-btn active-open"   onclick="setEstado('abierto', this)">En curso</button>
+      <button class="estado-btn"               onclick="setEstado('cerrado', this)">Cerrados</button>
+      <button class="estado-btn"               onclick="setEstado('todos',   this)">Todos</button>
+    </div>
+  </div>
+  <button class="btn btn-outline" onclick="limpiarFiltros()">✕ Limpiar</button>
+  <button class="btn btn-primary" onclick="cargarDatos()">↻ Actualizar</button>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-label">Sesiones</div><div class="stat-value orange" id="stat-sesiones">—</div></div>
+  <div class="stat"><div class="stat-label">Horas totales</div><div class="stat-value green" id="stat-horas">—</div></div>
+  <div class="stat"><div class="stat-label">Proyectos</div><div class="stat-value blue" id="stat-proyectos">—</div></div>
+  <div class="stat"><div class="stat-label">Operarios</div><div class="stat-value" id="stat-operarios">—</div></div>
+</div>
+
+<div id="content-sesiones">
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('proyecto')">Proyecto</th>
+          <th onclick="sortBy('cliente')">Cliente</th>
+          <th onclick="sortBy('tipo_trabajo')">Tipo</th>
+          <th onclick="sortBy('operario')">Operario</th>
+          <th onclick="sortBy('duracion_min')">Horas</th>
+          <th onclick="sortBy('inicio')">Inicio</th>
+          <th onclick="sortBy('fin')">Fin</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body">
+        <tr><td colspan="7"><div class="status-msg"><span>⏳</span>Cargando datos...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="content-proyectos" style="display:none">
+  <div class="resumen-grid" id="resumen-grid"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://kdgugxmidlojortcjfxk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_OtBWFoLezGqGqPbx2WU89Q_OT4Sci_J';
+
+let allData = [];
+let filteredData = [];
+let currentView = 'sesiones';
+let sortCol = 'inicio';
+let sortDir = 'desc';
+let estadoFiltro = 'abierto'; // abierto | cerrado | todos
+
+async function cargarDatos() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sesiones?select=*&order=inicio.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    allData = await res.json();
+    filtrar();
+  } catch(e) {
+    document.getElementById('tabla-body').innerHTML =
+      `<tr><td colspan="7"><div class="status-msg"><span>⚠️</span>Error al conectar<br><small style="font-size:11px;color:var(--red)">${e.message}</small></div></td></tr>`;
+  }
+}
+
+function setEstado(estado, btn) {
+  estadoFiltro = estado;
+  document.querySelectorAll('.estado-btn').forEach(b => {
+    b.classList.remove('active-open','active-closed','active-all');
+  });
+  if (estado === 'abierto') btn.classList.add('active-open');
+  else if (estado === 'cerrado') btn.classList.add('active-closed');
+  else btn.classList.add('active-all');
+  filtrar();
+}
+
+function filtrar() {
+  const fProyecto = document.getElementById('f-proyecto').value.trim().toLowerCase();
+  const fCliente  = document.getElementById('f-cliente').value.trim().toLowerCase();
+  const fOperario = document.getElementById('f-operario').value;
+  const fTipo     = document.getElementById('f-tipo').value;
+  const fDesde    = document.getElementById('f-desde').value;
+  const fHasta    = document.getElementById('f-hasta').value;
+
+  filteredData = allData.filter(s => {
+    if (fProyecto && !(s.proyecto||'').toLowerCase().includes(fProyecto)) return false;
+    if (fCliente  && !(s.cliente||'').toLowerCase().includes(fCliente))   return false;
+    if (fOperario && s.operario !== fOperario) return false;
+    if (fTipo     && s.tipo_trabajo !== fTipo) return false;
+    if (fDesde && s.inicio && s.inicio < fDesde) return false;
+    if (fHasta && s.inicio && s.inicio.substring(0,10) > fHasta) return false;
+    return true;
+  });
+
+  actualizarStats();
+  if (currentView === 'sesiones') renderTabla();
+  else renderResumen();
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  filtrar();
+}
+
+function actualizarStats() {
+  const totalMin = filteredData.reduce((a, s) => a + (s.duracion_min||0), 0);
+  const proyectos = new Set(filteredData.map(s => s.proyecto)).size;
+  const operarios = new Set(filteredData.map(s => s.operario)).size;
+  document.getElementById('stat-sesiones').textContent  = filteredData.length;
+  document.getElementById('stat-horas').textContent     = minToHours(totalMin);
+  document.getElementById('stat-proyectos').textContent = proyectos;
+  document.getElementById('stat-operarios').textContent = operarios;
+}
+
+function minToHours(min) {
+  if (!min) return '0h 0m';
+  return `${Math.floor(min/60)}h ${min%60}m`;
+}
+
+function renderTabla() {
+  const sorted = [...filteredData].sort((a, b) => {
+    let va = a[sortCol] ?? '', vb = b[sortCol] ?? '';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    return sortDir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+  });
+
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if ((sortCol === 'tipo_trabajo' && th.textContent === 'Tipo') ||
+        (sortCol === 'duracion_min' && th.textContent === 'Horas') ||
+        th.textContent.trim().toLowerCase() === sortCol) {
+      th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+  });
+
+  if (!sorted.length) {
+    document.getElementById('tabla-body').innerHTML =
+      `<tr><td colspan="7"><div class="status-msg"><span>📭</span>No hay sesiones con estos filtros</div></td></tr>`;
+    return;
+  }
+
+  document.getElementById('tabla-body').innerHTML = sorted.map(s => {
+    const tipo = s.tipo_trabajo || '';
+    const tipoClass = tipo === 'Montaje' ? 'tipo-montaje' : tipo === 'Desmontaje' ? 'tipo-desmontaje' : 'tipo-sat';
+    const inicio = s.inicio ? s.inicio.replace('T',' ').substring(0,16) : '—';
+    const fin    = s.fin    ? s.fin.replace('T',' ').substring(0,16)    : '<span style="color:var(--accent)">EN CURSO</span>';
+    return `<tr>
+      <td class="proyecto-num">${s.proyecto||'—'}</td>
+      <td class="cliente-cell">${s.cliente||'—'}</td>
+      <td><span class="tipo-badge ${tipoClass}">${tipo||'—'}</span></td>
+      <td><span class="operario-badge">${s.operario||'—'}</span></td>
+      <td class="horas-cell">${minToHours(s.duracion_min)}</td>
+      <td class="fecha-cell">${inicio}</td>
+      <td class="fecha-cell">${fin}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderResumen() {
+  // Agrupar por proyecto
+  const proyMap = {};
+  filteredData.forEach(s => {
+    const key = s.proyecto || '???';
+    if (!proyMap[key]) proyMap[key] = {
+      proyecto: key, cliente: s.cliente||'', total: 0,
+      Montaje: 0, Desmontaje: 0, SAT: 0, sesiones: 0,
+      cerrado: s.cerrado || false
+    };
+    proyMap[key].total += s.duracion_min || 0;
+    proyMap[key][s.tipo_trabajo] = (proyMap[key][s.tipo_trabajo]||0) + (s.duracion_min||0);
+    proyMap[key].sesiones++;
+    if (s.cerrado) proyMap[key].cerrado = true;
+    if (!proyMap[key].cliente && s.cliente) proyMap[key].cliente = s.cliente;
+  });
+
+  // Filtrar por estado
+  let cards = Object.values(proyMap).sort((a,b) => b.total - a.total);
+  if (estadoFiltro === 'abierto')  cards = cards.filter(p => !p.cerrado);
+  if (estadoFiltro === 'cerrado') cards = cards.filter(p =>  p.cerrado);
+
+  if (!cards.length) {
+    document.getElementById('resumen-grid').innerHTML =
+      `<div class="status-msg" style="grid-column:1/-1"><span>📭</span>No hay proyectos ${estadoFiltro === 'cerrado' ? 'cerrados' : 'en curso'}</div>`;
+    return;
+  }
+
+  document.getElementById('resumen-grid').innerHTML = cards.map(p => `
+    <div class="proyecto-card ${p.cerrado ? 'cerrado' : ''}">
+      <div class="card-header">
+        <div>
+          <div class="card-num">#${p.proyecto}</div>
+          <div class="card-cliente">${p.cliente}</div>
+        </div>
+        <div>
+          <div class="card-total">${minToHours(p.total)}</div>
+          <div class="card-total-label">${p.sesiones} sesión${p.sesiones!==1?'es':''}</div>
+        </div>
+      </div>
+      <div class="card-breakdown">
+        ${p.Montaje    ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--blue)">Montaje</span><span class="breakdown-val">${minToHours(p.Montaje)}</span></div>` : ''}
+        ${p.Desmontaje ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--red)">Desmontaje</span><span class="breakdown-val">${minToHours(p.Desmontaje)}</span></div>` : ''}
+        ${p.SAT        ? `<div class="breakdown-row"><span class="breakdown-label" style="color:var(--purple)">SAT</span><span class="breakdown-val">${minToHours(p.SAT)}</span></div>` : ''}
+      </div>
+      <div class="card-footer">
+        <span class="estado-tag ${p.cerrado ? 'closed' : 'open'}">${p.cerrado ? '● Cerrado' : '● En curso'}</span>
+        <button class="btn-cerrar ${p.cerrado ? 'reabrir' : 'cerrar'}"
+          onclick="toggleCerrado('${p.proyecto}', ${p.cerrado})">
+          ${p.cerrado ? '↺ Reabrir' : '✕ Cerrar'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleCerrado(proyecto, estaCerrado) {
+  const nuevoCerrado = !estaCerrado;
+  const confirma = confirm(nuevoCerrado
+    ? `¿Cerrar el proyecto ${proyecto}? Ya no aparecerá en "En curso".`
+    : `¿Reabrir el proyecto ${proyecto}?`
+  );
+  if (!confirma) return;
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/sesiones?proyecto=eq.${proyecto}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ cerrado: nuevoCerrado })
+      }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    // Actualizar localmente sin recargar todo
+    allData.forEach(s => { if (s.proyecto === proyecto) s.cerrado = nuevoCerrado; });
+    filtrar();
+  } catch(e) {
+    alert('Error al actualizar: ' + e.message);
+  }
+}
+
+function setView(v, btn) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('content-sesiones').style.display  = v === 'sesiones'  ? '' : 'none';
+  document.getElementById('content-proyectos').style.display = v === 'proyectos' ? '' : 'none';
+  document.getElementById('grupo-estado').style.display      = v === 'proyectos' ? '' : 'none';
+  filtrar();
+}
+
+function limpiarFiltros() {
+  ['f-proyecto','f-cliente','f-desde','f-hasta'].forEach(id => document.getElementById(id).value = '');
+  ['f-operario','f-tipo'].forEach(id => document.getElementById(id).value = '');
+  filtrar();
+}
+
+function exportarExcel() {
+  if (!filteredData.length) { alert('No hay datos para exportar'); return; }
+
+  const sesiones = filteredData.map(s => ({
+    'Proyecto':  s.proyecto || '',
+    'Cliente':   s.cliente  || '',
+    'Tipo':      s.tipo_trabajo || '',
+    'Operario':  s.operario || '',
+    'Horas':     s.duracion_min ? (s.duracion_min/60).toFixed(2) : '0',
+    'Minutos':   s.duracion_min || 0,
+    'Inicio':    s.inicio ? s.inicio.replace('T',' ').substring(0,16) : '',
+    'Fin':       s.fin    ? s.fin.replace('T',' ').substring(0,16)    : 'En curso',
+    'Cerrado':   s.cerrado ? 'Sí' : 'No',
+  }));
+
+  const proyMap = {};
+  filteredData.forEach(s => {
+    const key = s.proyecto || '???';
+    if (!proyMap[key]) proyMap[key] = { proyecto: key, cliente: s.cliente||'', Montaje: 0, Desmontaje: 0, SAT: 0, total: 0, cerrado: s.cerrado||false };
+    proyMap[key].total += s.duracion_min || 0;
+    proyMap[key][s.tipo_trabajo] = (proyMap[key][s.tipo_trabajo]||0) + (s.duracion_min||0);
+    if (s.cerrado) proyMap[key].cerrado = true;
+  });
+
+  const resumen = Object.values(proyMap).sort((a,b) => b.total - a.total).map(p => ({
+    'Proyecto':       p.proyecto,
+    'Cliente':        p.cliente,
+    'Montaje (h)':    (p.Montaje    / 60).toFixed(2),
+    'Desmontaje (h)': (p.Desmontaje / 60).toFixed(2),
+    'SAT (h)':        (p.SAT        / 60).toFixed(2),
+    'TOTAL (h)':      (p.total      / 60).toFixed(2),
+    'Estado':         p.cerrado ? 'Cerrado' : 'En curso',
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.json_to_sheet(sesiones);
+  ws1['!cols'] = [9,20,12,10,8,8,17,17,8].map(w => ({wch: w}));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Sesiones');
+
+  const ws2 = XLSX.utils.json_to_sheet(resumen);
+  ws2['!cols'] = [9,20,14,14,10,10,10].map(w => ({wch: w}));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por Proyecto');
+
+  XLSX.writeFile(wb, `IPAR_Horas_${new Date().toISOString().substring(0,10)}.xlsx`);
+}
+
+cargarDatos();
+</script>
+</body>
+</html>
