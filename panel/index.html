@@ -174,6 +174,70 @@
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── BOTÓN EDITAR FILA ───────────────────────────────── */
+  .btn-edit-row {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 3px; cursor: pointer; padding: 3px 8px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+    letter-spacing: 0.5px; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-edit-row:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MODAL ───────────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; width: 540px; max-width: 95vw; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.18s ease;
+  }
+  @keyframes modalIn {
+    from { opacity:0; transform:translateY(-14px) scale(0.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 18px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; letter-spacing: 0.5px; }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; padding: 4px 8px; transition: color 0.15s; line-height: 1; }
+  .modal-close:hover { color: var(--accent); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 20px; border-top: 1px solid var(--border); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  .form-input {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 13px;
+    border-radius: 4px; outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-section-title {
+    font-size: 11px; letter-spacing: 1.5px; color: var(--accent); font-weight: 700;
+    text-transform: uppercase; margin: 16px 0 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .msg-error   { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 4px; padding: 10px 14px; font-size: 12px; color: var(--red); margin-bottom: 14px; }
+  .msg-success { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 4px; padding: 10px 14px; font-size: 12px; color: var(--green); margin-bottom: 14px; }
+  .msg-info    { background: rgba(52,152,219,0.1); border: 1px solid rgba(52,152,219,0.3); border-radius: 4px; padding: 10px 14px; font-size: 12px; color: var(--blue); margin-bottom: 14px; }
+
+  .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; padding: 9px 20px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; }
+  .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+  .btn-save { background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; padding: 9px 24px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; }
+  .btn-save:hover { background: #1f6fa0; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-delete { background: rgba(231,76,60,0.12); color: var(--red); border: 1px solid rgba(231,76,60,0.3); border-radius: 4px; cursor: pointer; padding: 9px 18px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; margin-right: auto; }
+  .btn-delete:hover { background: var(--red); color: white; }
 </style>
 </head>
 <body>
@@ -255,6 +319,7 @@
           <th onclick="sortBy('duracion_min')">Horas</th>
           <th onclick="sortBy('inicio')">Inicio</th>
           <th onclick="sortBy('fin')">Fin</th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="tabla-body">
@@ -384,6 +449,7 @@ function renderTabla() {
       <td class="horas-cell">${minToHours(s.duracion_min)}</td>
       <td class="fecha-cell">${inicio}</td>
       <td class="fecha-cell">${fin}</td>
+      <td><button class="btn-edit-row" onclick='abrirModal(${JSON.stringify(s)})'>✎ Editar</button></td>
     </tr>`;
   }).join('');
 }
@@ -538,6 +604,201 @@ function exportarExcel() {
 }
 
 cargarDatos();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     MODAL EDITAR SESIÓN
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="cerrarSiOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Editar Sesión</div>
+        <div class="modal-subtitle" id="m-subtitulo"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="m-msg"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Proyecto *</label>
+          <input type="text" class="form-input" id="m-proyecto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <input type="text" class="form-input" id="m-cliente">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="m-tipo">
+            <option value="Montaje">Montaje</option>
+            <option value="Desmontaje">Desmontaje</option>
+            <option value="SAT">SAT</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operario</label>
+          <select class="form-input" id="m-operario">
+            <option value="benat">Beñat</option>
+            <option value="zigor">Zigor</option>
+            <option value="dani">Dani</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-title">⏱ Tiempos</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Inicio</label>
+          <input type="datetime-local" class="form-input" id="m-inicio" oninput="recalcularDuracion()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fin <span style="color:var(--muted);font-size:10px">(vacío = EN CURSO)</span></label>
+          <input type="datetime-local" class="form-input" id="m-fin" oninput="recalcularDuracion()">
+        </div>
+      </div>
+      <div id="m-duracion-preview" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);margin-top:-6px;margin-bottom:10px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-delete" onclick="eliminarSesion()">🗑 Eliminar</button>
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" id="btn-guardar" onclick="guardarSesion()">✔ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let sesionActual = null;
+
+function abrirModal(s) {
+  sesionActual = s;
+  document.getElementById('m-msg').innerHTML = '';
+  document.getElementById('m-subtitulo').textContent = `#${s.proyecto} · ${s.cliente || ''} · ID ${s.id}`;
+  document.getElementById('m-proyecto').value = s.proyecto || '';
+  document.getElementById('m-cliente').value  = s.cliente  || '';
+  document.getElementById('m-tipo').value     = s.tipo_trabajo || 'Montaje';
+  document.getElementById('m-operario').value = s.operario || '';
+  // Convertir ISO a datetime-local (cortar los segundos y zona)
+  document.getElementById('m-inicio').value = s.inicio ? s.inicio.substring(0,16) : '';
+  document.getElementById('m-fin').value    = s.fin    ? s.fin.substring(0,16)    : '';
+  recalcularDuracion();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function cerrarModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  sesionActual = null;
+}
+
+function cerrarSiOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) cerrarModal();
+}
+
+function recalcularDuracion() {
+  const ini = document.getElementById('m-inicio').value;
+  const fin = document.getElementById('m-fin').value;
+  const el = document.getElementById('m-duracion-preview');
+  if (ini && fin) {
+    const mins = Math.round((new Date(fin) - new Date(ini)) / 60000);
+    if (mins > 0) {
+      el.textContent = `Duración calculada: ${Math.floor(mins/60)}h ${mins%60}m`;
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = '⚠ El fin es anterior al inicio';
+      el.style.color = 'var(--red)';
+    }
+  } else {
+    el.textContent = ini ? 'Sesión EN CURSO (sin fin)' : '';
+    el.style.color = 'var(--muted)';
+  }
+}
+
+async function guardarSesion() {
+  if (!sesionActual) return;
+  const proyecto = document.getElementById('m-proyecto').value.trim();
+  if (!proyecto) { showMsg('error', '⚠ El proyecto es obligatorio.'); return; }
+
+  const ini = document.getElementById('m-inicio').value;
+  const fin = document.getElementById('m-fin').value;
+  let duracion_min = sesionActual.duracion_min;
+
+  if (ini && fin) {
+    const mins = Math.round((new Date(fin) - new Date(ini)) / 60000);
+    if (mins <= 0) { showMsg('error', '⚠ El fin debe ser posterior al inicio.'); return; }
+    duracion_min = mins;
+  }
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  const body = {
+    proyecto:     proyecto,
+    cliente:      document.getElementById('m-cliente').value.trim(),
+    tipo_trabajo: document.getElementById('m-tipo').value,
+    operario:     document.getElementById('m-operario').value,
+    inicio:       ini ? new Date(ini).toISOString() : null,
+    fin:          fin ? new Date(fin).toISOString() : null,
+    duracion_min: duracion_min,
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sesiones?id=eq.${sesionActual.id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    showMsg('success', '✔ Sesión actualizada correctamente');
+    // Actualizar en local
+    const idx = allData.findIndex(s => s.id === sesionActual.id);
+    if (idx !== -1) allData[idx] = { ...allData[idx], ...body };
+    filtrar();
+    setTimeout(cerrarModal, 1200);
+  } catch(e) {
+    showMsg('error', '⚠ Error al guardar: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✔ Guardar';
+  }
+}
+
+async function eliminarSesion() {
+  if (!sesionActual) return;
+  if (!confirm(`¿Eliminar esta sesión de #${sesionActual.proyecto}? Esta acción no se puede deshacer.`)) return;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sesiones?id=eq.${sesionActual.id}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    allData = allData.filter(s => s.id !== sesionActual.id);
+    filtrar();
+    cerrarModal();
+  } catch(e) {
+    showMsg('error', '⚠ Error al eliminar: ' + e.message);
+  }
+}
+
+function showMsg(tipo, texto) {
+  document.getElementById('m-msg').innerHTML = `<div class="msg-${tipo}">${texto}</div>`;
+}
 </script>
 </body>
 </html>
