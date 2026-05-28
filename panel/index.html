@@ -9,17 +9,17 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@300;600;700;900&display=swap');
 
   :root {
-    --bg: #0d0f14;
-    --surface: #161a22;
-    --border: #252a35;
+    --bg: #f2f4f7;
+    --surface: #ffffff;
+    --border: #dde1ea;
     --accent: #2980b9;
-    --accent2: #5dade2;
-    --text: #e8eaf0;
-    --muted: #5a6070;
-    --green: #2ecc71;
-    --blue: #3498db;
-    --purple: #9b59b6;
-    --red: #e74c3c;
+    --accent2: #1a6fa8;
+    --text: #1c2030;
+    --muted: #7a8090;
+    --green: #1a9952;
+    --blue: #1a6fa8;
+    --purple: #7d3c98;
+    --red: #c0392b;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,9 +71,9 @@
     cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
     font-size: 13px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s;
   }
-  .estado-btn.active-open  { background: var(--green); color: #0d0f14; }
-  .estado-btn.active-closed { background: var(--muted); color: #0d0f14; }
-  .estado-btn.active-all   { background: var(--blue); color: white; }
+  .estado-btn.active-open  { background: var(--green); color: #fff; }
+  .estado-btn.active-closed { background: var(--muted); color: #fff; }
+  .estado-btn.active-all   { background: var(--blue); color: #fff; }
 
   .stats-bar { display: flex; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
   .stat { flex: 1; background: var(--surface); padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
@@ -94,7 +94,7 @@
   thead th.sort-asc::after  { content: ' ↑'; color: var(--accent); }
   thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
   tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-  tbody tr:hover { background: rgba(232, 83, 42, 0.04); }
+  tbody tr:hover { background: rgba(41, 128, 185, 0.06); }
   tbody td { padding: 11px 14px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text); }
 
   .proyecto-num { color: var(--accent); font-weight: 500; }
@@ -164,7 +164,7 @@
   .btn-cerrar.cerrar  { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
   .btn-cerrar.cerrar:hover  { background: var(--red); color: white; }
   .btn-cerrar.reabrir { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
-  .btn-cerrar.reabrir:hover { background: var(--green); color: #0d0f14; }
+  .btn-cerrar.reabrir:hover { background: var(--green); color: #fff; }
 
   .view-toggle { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
   .view-btn { padding: 7px 14px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.2s; }
@@ -194,7 +194,7 @@
   .modal {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 8px; width: 540px; max-width: 95vw; max-height: 90vh;
-    overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     animation: modalIn 0.18s ease;
   }
   @keyframes modalIn {
